@@ -1,9 +1,25 @@
-import CountDownTimer from '@/app/ui/CountDown';
+import { Suspense } from "react";
+import type { Task } from "./lib/definition";
+import { fetchActiveTasks } from './lib/data';
+import DashboardClient from "./ui/DashboardClient";
+async function DashboardContent() {
+  let activeTasks: Task[] = [];
+
+  try {
+    activeTasks = await fetchActiveTasks();
+  } catch(error) {
+    console.error();
+    throw new Error('Database Error: Failed to fetch data tasks');
+  }
+
+  return <DashboardClient tasks={activeTasks}/>;
+
+} 
+
 export default function Home(){
-  return (
-    <main className='flex min-h-screen flex-col bg-amber-50 justify-center items-center'>
-      <CountDownTimer/>
-      
-    </main>
-  );
+  return(
+    <Suspense fallback={<div>loading...</div>}>
+      <DashboardContent/>
+    </Suspense>  
+  )
 };
