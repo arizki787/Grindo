@@ -18,8 +18,10 @@ async function DashboardContent() {
 
 export default function Home(){
   return(
-    <Suspense fallback={<div>loading...</div>}>
-      <DashboardContent/>
-    </Suspense>  
+    <main className="flex min-h-screen flex-col items-center p-8 md:p-24 gap-8">
+      <Suspense fallback={<div className="text-foreground">loading...</div>}>
+        <DashboardContent/>
+      </Suspense>
+    </main>
   )
 };

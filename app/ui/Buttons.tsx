@@ -6,7 +6,7 @@ export function DeleteTask({ id }: { id: string }) {
         <>
             <form action={deleteTaskAction}>
                 <input type="hidden" name="id" value={id}/>
-                <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
+                <button type="submit" className="rounded-md border border-olive-green p-2 hover:bg-olive-green text-foreground transition-colors">
                     <span className="sr-only">Delete</span>
                     <CiTrash className="w-5 h-5" />    
                 </button>    

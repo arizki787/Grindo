@@ -41,21 +41,21 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
 
   return (
     <div className="mt-6 flex w-full max-w-xl flex-col">
-      <h2 className="text-sky-500 text-xl font-bold tracking-widest text-center">TASK</h2>
+      <h2 className="text-warm-brown text-xl font-bold tracking-widest text-center font-heading">TASKS</h2>
 
       {usingFallback && (
-        <p className="mt-2 text-sm text-amber-700">Showing sample tasks (fallback data).</p>
+        <p className="mt-2 text-sm text-warm-brown">Showing sample tasks (fallback data).</p>
       )}
 
-      <div className="mt-3 flex grow flex-col rounded-xl bg-gray-50 p-4">
+      <div className="mt-3 flex grow flex-col rounded-2xl bg-dark-forest shadow-lg border border-olive-green/20 p-4">
           <ul className="space-y-3">
             {tasksToDisplay
                 .filter((task) => !task.is_deleted)
                 .map((task) => (
-                    <li key={task.id} className={`bg-white px-6 py-4 rounded-lg shadow-sm cursor-pointer transition-colors
+                    <li key={task.id} className={`px-6 py-4 rounded-xl shadow-md cursor-pointer transition-colors
                       ${selectedId === task.id 
-                        ? "bg-sky-100 border border-sky-400 text-sky-700" 
-                        : "hover:bg-gray-100"
+                        ? "bg-olive-green border border-warm-brown text-foreground" 
+                        : "bg-dark-espresso hover:bg-olive-green/40 text-foreground"
                       }`} onClick={()=>setSelectedId(task.id)}
                     >
                       <div className="grid grid-cols-2">
@@ -71,7 +71,7 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
                                     name: e.target.value,
                                   })
                                 }
-                                className="border rounded px-2 py-1"
+                                className="border border-olive-green bg-dark-forest text-foreground rounded px-2 py-1 outline-none focus:border-warm-brown"
                               />
 
                               <input 
@@ -83,15 +83,15 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
                                     goal: e.target.value,
                                   })
                                 }
-                                className="border rounded px-2 py-1"
+                                className="border border-olive-green bg-dark-forest text-foreground rounded px-2 py-1 outline-none focus:border-warm-brown"
                               />
                             </>
                           ) : (
                             <>
-                              <div className="font-semibold  text-gray-800">
+                              <div className="font-semibold text-foreground tracking-wide font-heading">
                                 {task.name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-foreground/70">
                                 Progress: {task.count} / {task.goal}
                               </div>
                             </>
@@ -103,14 +103,14 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
                             <>
                               <button
                                 onClick={() => handleSave(task.id)}
-                                className="rounded-md border p-2 hover:bg-gray-100"
+                                className="rounded-md border border-olive-green p-2 hover:bg-olive-green text-foreground transition-colors"
                               >
                                 <span className="sr-only">Save</span>
                                 <CiFloppyDisk className="w-5" />
                               </button>
                               <button
                                 onClick={() => setEditingTaskId(null)}
-                                className="rounded-md border p-2 hover:bg-gray-100"
+                                className="rounded-md border border-olive-green p-2 hover:bg-olive-green text-foreground transition-colors"
                               >
                                 <span className="sr-only">Cancel</span>
                                 <CiCircleRemove className="w-5" />
@@ -120,7 +120,7 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
                             <>
                               <button
                                 onClick={() => handleEditClick(task)}
-                                className="rounded-md border p-2 hover:bg-gray-100"
+                                className="rounded-md border border-olive-green p-2 hover:bg-olive-green text-foreground transition-colors"
                               >
                                 <span className="sr-only">Edit</span>
                                 <CiEdit className="w-5 h-5" />
@@ -134,16 +134,16 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
             ))}
           </ul>
           <form action={createTask}>
-            <div className="bg-white mt-3 px-6 py-4 rounded-lg shadow-sm">
+            <div className="bg-dark-espresso mt-4 px-6 py-4 rounded-xl shadow-md border border-olive-green/20">
               <div className="flex flex-row items-center justify-between">
-                  <h2 className="font-bold">ADD TASK :</h2>
+                  <h2 className="font-bold text-foreground font-heading">ADD TASK :</h2>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 <input
                   type="text"
                   name="name"
                   placeholder="Task name"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-sky-400"
+                  className="rounded-md bg-dark-forest text-foreground border border-olive-green px-3 py-2 text-sm outline-none focus:border-warm-brown placeholder-foreground/50"
                   required
                 />
                 <input
@@ -151,14 +151,14 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
                   name="goal"
                   placeholder="Goal"
                   min="1"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-sky-400"
+                  className="rounded-md bg-dark-forest text-foreground border border-olive-green px-3 py-2 text-sm outline-none focus:border-warm-brown placeholder-foreground/50"
                   required
                 />
               </div>
               <div className="mt-3 flex justify-end">
                 <button
                   type="submit"
-                  className="rounded-md bg-sky-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-600"
+                  className="rounded-md bg-warm-brown px-4 py-2 text-sm font-semibold text-foreground hover:bg-opacity-80 transition-colors uppercase tracking-wider"
                 >
                   Add Task
                 </button>
