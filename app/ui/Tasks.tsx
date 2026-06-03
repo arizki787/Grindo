@@ -45,7 +45,7 @@ export default function TaskForm({ tasks, selectedId, setSelectedId } : {
     <div className="flex w-full max-w-3xl flex-col bg-[#141e0f]/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-8 rounded-[2rem] relative z-10">
       
       <div className="flex justify-between items-center mb-6 px-2">
-        <h2 className="text-warm-brown text-lg font-bold tracking-[0.3em] font-heading uppercase">Tasks</h2>
+        <h2 className="text-stone-50 text-lg font-bold tracking-[0.3em] font-heading uppercase">Tasks</h2>
         <button 
           onClick={() => setIsAdding(!isAdding)} 
           className="px-4 py-2 bg-olive-green/30 hover:bg-olive-green/50 border border-olive-green/50 rounded-full flex items-center gap-2 text-sm text-[#a3e635] transition-colors"

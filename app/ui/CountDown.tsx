@@ -2,15 +2,50 @@
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { incrementTask } from '../lib/actions';
-import { BiLeaf } from 'react-icons/bi';
+import { BiLeaf, BiBed } from 'react-icons/bi';
 import { FiRefreshCcw } from 'react-icons/fi';
 import { IoPause, IoPlay } from 'react-icons/io5';
 
+const FOCUS_TIME = 1500; // 25 minutes
+const REST_TIME = 500; // 500 seconds
+
 export default function CountDownTimer({taskId}: { taskId: string | null}) {
 
+  const [mode, setMode] = useState<'focus' | 'rest'>('focus');
   const [buttonStatus, setButtonStatus] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1500); // 25 minutes
-  const totalTime = 1500;
+  const [timeLeft, setTimeLeft] = useState(FOCUS_TIME);
+  const totalTime = mode === 'focus' ? FOCUS_TIME : REST_TIME;
+
+  const playNotificationSound = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      const playTone = (freq: number, start: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+        
+        gain.gain.setValueAtTime(0.5, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(start);
+        osc.stop(start + duration);
+      };
+
+      // Play a friendly C5 - E5 double beep chime
+      playTone(523.25, ctx.currentTime, 0.6); // C5
+      playTone(659.25, ctx.currentTime + 0.15, 0.8); // E5
+    } catch (err) {
+      console.error('Failed to play sound', err);
+    }
+  };
 
   useEffect(() => {
     if (!buttonStatus) return;
@@ -30,10 +65,21 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
   }, [buttonStatus, taskId]);
 
   useEffect(() => {
-    if (timeLeft === 0 && !buttonStatus && taskId) {
-      incrementTask(taskId);
+    if (timeLeft === 0 && !buttonStatus) {
+      if (mode === 'focus') {
+        if (taskId) {
+          incrementTask(taskId);
+        }
+        playNotificationSound();
+        setMode('rest');
+        setTimeLeft(REST_TIME);
+      } else {
+        playNotificationSound();
+        setMode('focus');
+        setTimeLeft(FOCUS_TIME);
+      }
     }
-  }, [timeLeft, buttonStatus, taskId]);
+  }, [timeLeft, buttonStatus, taskId, mode]);
 
   const elapsed = totalTime - timeLeft;
   const progressPercent = elapsed / totalTime;
@@ -89,10 +135,32 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
         {/* Inner Content */}
         <div className="relative flex flex-col items-center justify-center z-10 h-full gap-2">
           
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full shadow-inner mb-2">
-            <BiLeaf className="text-[#a3e635] w-4 h-4" />
-            <span className="text-xs font-semibold text-foreground/80 tracking-widest uppercase">Focus Time</span>
-          </div>
+          <button
+            onClick={() => {
+              const newMode = mode === 'focus' ? 'rest' : 'focus';
+              setMode(newMode);
+              setTimeLeft(newMode === 'focus' ? FOCUS_TIME : REST_TIME);
+              setButtonStatus(false);
+            }}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-1.5 border rounded-full shadow-inner mb-2 transition-all cursor-pointer duration-300 outline-none select-none',
+              mode === 'focus'
+                ? 'bg-white/5 border-white/10 hover:bg-white/10 text-foreground/80'
+                : 'bg-emerald-950/80 border-[#a3e635] text-white shadow-[0_0_15px_rgba(163,230,53,0.4)] scale-105'
+            )}
+          >
+            {mode === 'focus' ? (
+              <>
+                <BiLeaf className="text-[#a3e635] w-4 h-4 animate-pulse" />
+                <span className="text-xs font-semibold tracking-widest uppercase">Focus Time</span>
+              </>
+            ) : (
+              <>
+                <BiBed className="text-[#a3e635] w-4 h-4 animate-bounce" />
+                <span className="text-xs font-semibold tracking-widest uppercase">Rest Mode</span>
+              </>
+            )}
+          </button>
 
           <div className="text-7xl text-foreground font-bold tracking-widest font-sans drop-shadow-md my-2 tabular-nums">
             {minutes}:{seconds}
