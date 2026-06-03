@@ -7,7 +7,7 @@ import { FiRefreshCcw } from 'react-icons/fi';
 import { IoPause, IoPlay } from 'react-icons/io5';
 
 const FOCUS_TIME = 1500; // 25 minutes
-const REST_TIME = 500; // 500 seconds
+const REST_TIME = 300; // 500 seconds
 
 export default function CountDownTimer({taskId}: { taskId: string | null}) {
 
@@ -50,16 +50,21 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
   useEffect(() => {
     if (!buttonStatus) return;
 
+    const startTime = Date.now();
+    const initialTimeLeft = timeLeft;
+    const targetTime = startTime + initialTimeLeft * 1000;
+
     const countDownInterval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(countDownInterval);
-          setButtonStatus(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const now = Date.now();
+      const remainingSeconds = Math.max(0, Math.ceil((targetTime - now) / 1000));
+      
+      setTimeLeft(remainingSeconds);
+
+      if (remainingSeconds <= 0) {
+        clearInterval(countDownInterval);
+        setButtonStatus(false);
+      }
+    }, 200);
 
     return () => clearInterval(countDownInterval);
   }, [buttonStatus, taskId]);
@@ -144,7 +149,7 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
             }}
             className={clsx(
               'flex items-center gap-2 px-4 py-1.5 border rounded-full shadow-inner mb-2 transition-all cursor-pointer duration-300 outline-none select-none',
-              mode === 'focus'
+              mode === 'focus'  
                 ? 'bg-white/5 border-white/10 hover:bg-white/10 text-foreground/80'
                 : 'bg-emerald-950/80 border-[#a3e635] text-white shadow-[0_0_15px_rgba(163,230,53,0.4)] scale-105'
             )}
