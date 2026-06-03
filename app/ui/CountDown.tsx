@@ -18,30 +18,8 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
 
   const playNotificationSound = () => {
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      
-      const playTone = (freq: number, start: number, duration: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, start);
-        
-        gain.gain.setValueAtTime(0.5, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.start(start);
-        osc.stop(start + duration);
-      };
-
-      // Play a friendly C5 - E5 double beep chime
-      playTone(523.25, ctx.currentTime, 0.6); // C5
-      playTone(659.25, ctx.currentTime + 0.15, 0.8); // E5
+      const audio = new Audio('/notification.MP3');
+      audio.play().catch(err => console.error('Audio play error:', err));
     } catch (err) {
       console.error('Failed to play sound', err);
     }
