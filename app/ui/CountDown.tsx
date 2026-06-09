@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { incrementTask } from '../lib/actions';
 import { BiLeaf, BiBed } from 'react-icons/bi';
 import { FiRefreshCcw } from 'react-icons/fi';
 import { IoPause, IoPlay } from 'react-icons/io5';
@@ -9,7 +8,7 @@ import { IoPause, IoPlay } from 'react-icons/io5';
 const FOCUS_TIME = 1500; // 25 minutes
 const REST_TIME = 300; // 500 seconds
 
-export default function CountDownTimer({taskId}: { taskId: string | null}) {
+export default function CountDownTimer({taskId, onIncrement}: { taskId: string | null; onIncrement: (id: string) => void }) {
 
   const [mode, setMode] = useState<'focus' | 'rest'>('focus');
   const [buttonStatus, setButtonStatus] = useState(false);
@@ -50,8 +49,8 @@ export default function CountDownTimer({taskId}: { taskId: string | null}) {
   useEffect(() => {
     if (timeLeft === 0 && !buttonStatus) {
       if (mode === 'focus') {
-        if (taskId) {
-          incrementTask(taskId);
+        if (taskId && onIncrement) {
+          onIncrement(taskId);
         }
         playNotificationSound();
         setMode('rest');

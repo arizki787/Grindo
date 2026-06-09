@@ -1,4 +1,4 @@
-import { BiLeaf, BiStopwatch, BiCog } from 'react-icons/bi';
+import { BiLeaf, BiStopwatch, BiEnvelope } from 'react-icons/bi';
 
 export default function Sidebar() {
   return (
@@ -14,11 +14,19 @@ export default function Sidebar() {
           <span className="font-semibold tracking-wide">Focus</span>
         </div>
         
-        <div className="flex items-center gap-4 px-4 py-3 text-foreground/60 hover:text-foreground cursor-pointer transition-colors pl-[1.25rem]">
-          <BiCog className="w-6 h-6" />
-          <span className="font-medium tracking-wide">Settings</span>
-        </div>
+        <a 
+          href="https://adxtinsight.site" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-4 px-4 py-3 text-foreground/60 hover:text-foreground transition-colors pl-[1.25rem] no-underline"
+        >
+          <BiEnvelope className="w-6 h-6" />
+          <span className="font-medium tracking-wide">Contact</span>
+        </a>
       </nav>
     </aside>
   );
 }
+
+
+

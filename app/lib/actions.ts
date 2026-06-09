@@ -2,6 +2,7 @@
 import postgres from 'postgres';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
 
 export type State = {
     errors?: {
@@ -15,6 +16,15 @@ const sql = postgres(process.env.POSTGRES_URL!, {
     ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
 });
 
+async function getRequiredUserId() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        throw new Error('Unauthorized: You must be logged in to modify database tasks.');
+    }
+    return user.id;
+}
+
 const FormSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -25,6 +35,7 @@ const FormSchema = z.object({
 const CreateTask = FormSchema.pick({ name: true, goal: true });
 
 export async function createTask(formData: FormData) {
+    const userId = await getRequiredUserId();
     const validateFields = CreateTask.safeParse({
         name: formData.get('name'),
         goal: formData.get('goal'),
@@ -35,8 +46,8 @@ export async function createTask(formData: FormData) {
     const { name, goal } = validateFields.data;
     try {
         await sql`
-            INSERT INTO tasks (name, count, goal, is_deleted)
-            VALUES (${name}, 0, ${goal}, false)
+            INSERT INTO tasks (name, count, goal, is_deleted, user_id)
+            VALUES (${name}, 0, ${goal}, false, ${userId})
         `;
         revalidatePath('/');
     } catch (error) {
@@ -46,11 +57,12 @@ export async function createTask(formData: FormData) {
 }
 
 export async function deleteTask(id:string){
+    const userId = await getRequiredUserId();
     try{
         await sql`
             UPDATE tasks
             SET is_deleted = true
-            WHERE id = ${id}
+            WHERE id = ${id} AND user_id = ${userId}
         `
     } catch (error) {
         console.error(error);
@@ -65,11 +77,12 @@ export async function deleteTaskAction(formData: FormData) {
 }
 
 export async function incrementTask(id: string) {
+    const userId = await getRequiredUserId();
     try{
         await sql`
             UPDATE tasks
             SET count = count + 1
-            WHERE id = ${id}
+            WHERE id = ${id} AND user_id = ${userId}
         `
     }catch (error) {
         console.error(error);
@@ -79,15 +92,16 @@ export async function incrementTask(id: string) {
 }
 
 export async function updateTask(id: string, name: string, goal: number) {
+    const userId = await getRequiredUserId();
     try {
         await sql`
             UPDATE tasks
             SET name = ${name}, goal = ${goal}
-            WHERE id = ${id}
+            WHERE id = ${id} AND user_id = ${userId}
         `;
     } catch (error) {
         console.error(error);
         throw new Error('Database Error: Failed to update task');
     }
     revalidatePath('/');
-}
+}
