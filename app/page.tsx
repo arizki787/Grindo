@@ -24,7 +24,7 @@ export default async function Home(){
   const { data: { user } } = await supabase.auth.getUser();
 
   return(
-    <main className="flex min-h-screen bg-dark-espresso relative overflow-hidden">
+    <main className="flex min-h-screen flex-col md:flex-row bg-dark-espresso relative overflow-hidden">
       {/* Advanced Ambient Glows */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(217,119,6,0.18),transparent_65%)] pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(35,57,21,0.45),transparent_60%)] pointer-events-none z-0" />
@@ -81,11 +81,11 @@ export default async function Home(){
         />
       </svg>
 
+
       {/* Sidebar */}
       <Sidebar />
-
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col items-center justify-start p-8 md:p-12 relative z-10 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 md:p-12 relative z-10 overflow-y-auto w-full">
         {/* Top Header Section */}
         <div className="w-full max-w-3xl flex justify-end mb-6">
           <AuthButton user={user} />
