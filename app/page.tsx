@@ -6,7 +6,7 @@ import Sidebar from "./ui/Sidebar";
 import { createClient } from "@/utils/supabase/server";
 import AuthButton from "./ui/AuthButton";
 
-async function DashboardContent({ user }: { user: any }) {
+async function DashboardContent({ user, tab }: { user: any; tab: string }) {
   let activeTasks: Task[] = [];
 
   try {
@@ -16,12 +16,19 @@ async function DashboardContent({ user }: { user: any }) {
     throw new Error('Database Error: Failed to fetch data tasks');
   }
 
-  return <DashboardClient tasks={activeTasks} user={user}/>;
+  return <DashboardClient tasks={activeTasks} user={user} tab={tab}/>;
 } 
 
-export default async function Home(){
+interface PageProps {
+  searchParams: Promise<{ tab?: string}>;
+}
+
+export default async function Home({ searchParams }: PageProps){
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const resolvedParams = await searchParams;
+  const activeTab = resolvedParams.tab || 'focus';
 
   return(
     <main className="flex min-h-screen flex-col md:flex-row bg-dark-espresso relative overflow-hidden">
@@ -83,7 +90,7 @@ export default async function Home(){
 
 
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar activeTab={activeTab} />
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 md:p-12 relative z-10 overflow-y-auto w-full">
         {/* Top Header Section */}
@@ -92,7 +99,7 @@ export default async function Home(){
         </div>
 
         <Suspense fallback={<div className="text-foreground mt-20">loading...</div>}>
-          <DashboardContent user={user}/>
+          <DashboardContent user={user} tab={activeTab}/>
         </Suspense>
       </div>
     </main>

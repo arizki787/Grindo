@@ -5,17 +5,24 @@ import { BiLeaf, BiBed } from 'react-icons/bi';
 import { FiRefreshCcw } from 'react-icons/fi';
 import { IoPause, IoPlay } from 'react-icons/io5';
 
-const FOCUS_TIME = 1500; // 25 minutes
-const REST_TIME = 300; // 500 seconds
-
-export default function CountDownTimer({taskId, onIncrement}: { taskId: string | null; onIncrement: (id: string) => void }) {
+export default function CountDownTimer({
+  taskId, 
+  onIncrement, 
+  focusTime, 
+  breakTime
+}: { 
+  taskId: string | null; 
+  onIncrement: (id: string) => void; 
+  focusTime: number; 
+  breakTime: number
+;}) {
 
   const [mode, setMode] = useState<'focus' | 'rest'>('focus');
   const [buttonStatus, setButtonStatus] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(FOCUS_TIME);
-  const totalTime = mode === 'focus' ? FOCUS_TIME : REST_TIME;
+  const [timeLeft, setTimeLeft] = useState(focusTime);
+  const totalTime = mode === 'focus' ? focusTime : breakTime;
 
-  const playNotificationSound = () => {
+  const playNotificationSound = ()  => {
     try {
       const audio = new Audio('/notification.MP3');
       audio.play().catch(err => console.error('Audio play error:', err));
@@ -23,6 +30,12 @@ export default function CountDownTimer({taskId, onIncrement}: { taskId: string |
       console.error('Failed to play sound', err);
     }
   };
+
+  useEffect(() => {
+    if (!buttonStatus) {
+      setTimeLeft(mode === 'focus' ? focusTime : breakTime)
+    }
+  }, [focusTime, breakTime, mode, buttonStatus])
 
   useEffect(() => {
     if (!buttonStatus) return;
@@ -54,14 +67,14 @@ export default function CountDownTimer({taskId, onIncrement}: { taskId: string |
         }
         playNotificationSound();
         setMode('rest');
-        setTimeLeft(REST_TIME);
+        setTimeLeft(breakTime);
       } else {
         playNotificationSound();
         setMode('focus');
-        setTimeLeft(FOCUS_TIME);
+        setTimeLeft(focusTime);
       }
     }
-  }, [timeLeft, buttonStatus, taskId, mode]);
+  }, [timeLeft, buttonStatus, taskId, mode, breakTime, focusTime]);
 
   const elapsed = totalTime - timeLeft;
   const progressPercent = elapsed / totalTime;
@@ -121,7 +134,7 @@ export default function CountDownTimer({taskId, onIncrement}: { taskId: string |
             onClick={() => {
               const newMode = mode === 'focus' ? 'rest' : 'focus';
               setMode(newMode);
-              setTimeLeft(newMode === 'focus' ? FOCUS_TIME : REST_TIME);
+              setTimeLeft(newMode === 'focus' ? focusTime : breakTime);
               setButtonStatus(false);
             }}
             className={clsx(

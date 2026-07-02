@@ -1,6 +1,7 @@
-import { BiLeaf, BiStopwatch, BiEnvelope } from 'react-icons/bi';
+import { BiLeaf, BiStopwatch, BiEnvelope, BiCog } from 'react-icons/bi';
+import Link from 'next/link';
 
-export default function Sidebar() {
+export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
   return (
     <aside className="w-full md:w-64 h-auto flex flex-col md:min-h-screen pt-6 md:pt-8 md:pb-0 border-b md:border-b-0 md:border-r border-white/5 relative z-10 px-6">
       <div className="flex items-center gap-2 md:mb-16 mb-16 pl-2 justify-between md:justify-start">
@@ -10,12 +11,34 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex flex-row md:flex-col gap-4 pr-6 md:pr-6">
-        <div className="flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md bg-[#141e0f]/40 border-l-4 border-olive-green text-foreground cursor-pointer transition-colors shadow-sm">
-          <BiStopwatch className="w-6 h-6 text-olive-green" />
+      <nav className="flex flex-row md:flex-col gap-4 pr-0 md:pr-6">
+        {/* focus link */}
+        <Link
+          href="/?tab=focus"
+          className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
+            activeTab === 'focus'
+              ? 'bg-[#141e0f]/40 border-l-4 border-olive-green text-foreground'
+              : 'border-transparent text-foreground/60 hover:text-foreground'
+          }`}
+        >
+          <BiStopwatch className={`w-6 h-6 ${activeTab === 'focus' ? 'text-olive-green' : ''}`} />
           <span className="font-semibold tracking-wide">Focus</span>
-        </div>
+        </Link>
+        {/* settings lnk */}
         
+        <Link
+          href='/?tab=settings'
+          className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
+            activeTab === 'settings'
+              ? 'bg-[#141e0f]/40 border-l-4 border-olive-green text-foreground'
+              : 'border-transparent text-foreground/60 hover:text-foreground'
+          }`}
+        >
+          <BiCog className={`w-6 h-6 ${activeTab === 'settings' ? 'text-olive-green' : ''}`}/>
+          <span className='font-semibold tracking-wide'>Settings</span>
+        </Link>
+
+        {/* contact link */}
         <a 
           href="https://adxtinsight.site" 
           target="_blank" 
