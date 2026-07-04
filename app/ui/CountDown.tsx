@@ -16,12 +16,12 @@ export default function CountDownTimer({
   focusTime: number; 
   breakTime: number
 ;}) {
-
+  
   const [mode, setMode] = useState<'focus' | 'rest'>('focus');
-  const [buttonStatus, setButtonStatus] = useState(false);
+  const [buttonStart, setButtonStart] = useState(false); // false = logo start, true = logo play
   const [timeLeft, setTimeLeft] = useState(focusTime);
   const totalTime = mode === 'focus' ? focusTime : breakTime;
-
+  
   const playNotificationSound = ()  => {
     try {
       const audio = new Audio('/notification.MP3');
@@ -32,13 +32,7 @@ export default function CountDownTimer({
   };
 
   useEffect(() => {
-    if (!buttonStatus) {
-      setTimeLeft(mode === 'focus' ? focusTime : breakTime)
-    }
-  }, [focusTime, breakTime, mode, buttonStatus])
-
-  useEffect(() => {
-    if (!buttonStatus) return;
+    if (!buttonStart) return;
 
     const startTime = Date.now();
     const initialTimeLeft = timeLeft;
@@ -52,15 +46,15 @@ export default function CountDownTimer({
 
       if (remainingSeconds <= 0) {
         clearInterval(countDownInterval);
-        setButtonStatus(false);
+        setButtonStart(false);
       }
     }, 200);
 
     return () => clearInterval(countDownInterval);
-  }, [buttonStatus, taskId]);
+  }, [buttonStart, taskId]);
 
   useEffect(() => {
-    if (timeLeft === 0 && !buttonStatus) {
+    if (timeLeft === 0 && !buttonStart) {
       if (mode === 'focus') {
         if (taskId && onIncrement) {
           onIncrement(taskId);
@@ -74,7 +68,8 @@ export default function CountDownTimer({
         setTimeLeft(focusTime);
       }
     }
-  }, [timeLeft, buttonStatus, taskId, mode, breakTime, focusTime]);
+  }, [timeLeft, buttonStart, taskId, mode, breakTime, focusTime]);
+
 
   const elapsed = totalTime - timeLeft;
   const progressPercent = elapsed / totalTime;
@@ -135,7 +130,7 @@ export default function CountDownTimer({
               const newMode = mode === 'focus' ? 'rest' : 'focus';
               setMode(newMode);
               setTimeLeft(newMode === 'focus' ? focusTime : breakTime);
-              setButtonStatus(false);
+              setButtonStart(false);
             }}
             className={clsx(
               'flex items-center gap-2 px-4 py-1.5 border rounded-full shadow-inner mb-2 transition-all cursor-pointer duration-300 outline-none select-none',
@@ -164,24 +159,25 @@ export default function CountDownTimer({
           <button
             className={clsx(
               'mt-2 px-6 py-2 rounded-full font-bold text-foreground transition-all flex items-center gap-2 shadow-[0_4px_14px_rgba(0,0,0,0.2)] border',
-              buttonStatus
+              buttonStart
                 ? 'bg-warm-brown/80 border-warm-brown hover:bg-warm-brown'
                 : 'bg-olive-green/80 border-olive-green hover:bg-olive-green'
             )}
             onClick={() => {
-              if (timeLeft === 0) setTimeLeft(totalTime);
-              setButtonStatus((prev) => !prev);
+
+              timeLeft === 0 ? setTimeLeft(totalTime) : setTimeLeft(timeLeft);
+              setButtonStart((prev) => !prev);
             }}
           >
-            {buttonStatus ? <IoPause className="w-5 h-5"/> : <IoPlay className="w-5 h-5"/>}
-            <span className="tracking-widest uppercase text-sm">{buttonStatus ? 'Pause' : timeLeft === 0 ? 'Restart' : 'Start'}</span>
+            {buttonStart ? <IoPause className="w-5 h-5"/> : <IoPlay className="w-5 h-5"/>}
+            <span className="tracking-widest uppercase text-sm">{buttonStart ? 'Pause' : timeLeft === 0 ? 'Restart' : 'Start'}</span>
           </button>
 
         </div>
       </div>
 
       <button 
-        onClick={() => { setTimeLeft(totalTime); setButtonStatus(false); }}
+        onClick={() => { setTimeLeft(totalTime); setButtonStart(false);}}
         className="mt-8 flex items-center gap-2 text-foreground/60 hover:text-[#a3e635] transition-colors"
       >
         <FiRefreshCcw />
