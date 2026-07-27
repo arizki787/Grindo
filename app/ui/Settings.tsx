@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiSave, BiTimeFive, BiCoffee } from 'react-icons/bi';
 
 interface SettingsFormProps{
@@ -14,12 +14,27 @@ export default function SettingsForm({ focusTime, breakTime, onSave }: SettingsF
     const [localFocus, setLocalFocus] = useState(focusTime);
     const [localBreak, setLocalBreak] = useState(breakTime);
     const [saved, setSaved] = useState(false);
+    const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (savedTimerRef.current) {
+                clearTimeout(savedTimerRef.current);
+            }
+        };
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(localFocus, localBreak);
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        if (savedTimerRef.current) {
+            clearTimeout(savedTimerRef.current);
+        }
+        savedTimerRef.current = setTimeout(() => {
+            setSaved(false);
+            savedTimerRef.current = null;
+        }, 3000);
     };
 
     return (
@@ -60,8 +75,8 @@ export default function SettingsForm({ focusTime, breakTime, onSave }: SettingsF
                             type="range"
                             min="1"
                             max="30"
-                            value={localFocus}
-                            onChange={(e) => setLocalFocus(Number(e.target.value))}
+                            value={localBreak}
+                            onChange={(e) => setLocalBreak(Number(e.target.value))}
                             className="flex-1 accent-[#a3e635] bg-black/40 h-2 rounded-lg cursor-pointer"
                         />
                         <span className="text-stone-50 font-mono font-bold text-xl min-w-12">

@@ -1,20 +1,8 @@
 'use server';
-import postgres from 'postgres';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
-
-export type State = {
-    errors?: {
-        name?: string[];
-        count?: string[];
-        goal?: string[];
-    };
-    message?: string | null
-}
-const sql = postgres(process.env.POSTGRES_URL!, {
-    ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
-});
+import { sql } from './db';
 
 async function getRequiredUserId() {
     const supabase = await createClient();

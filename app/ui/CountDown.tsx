@@ -124,7 +124,6 @@ export default function CountDownTimer({
 
         {/* Inner Content */}
         <div className="relative flex flex-col items-center justify-center z-10 h-full gap-2">
-          
           <button
             onClick={() => {
               const newMode = mode === 'focus' ? 'rest' : 'focus';

@@ -1,11 +1,6 @@
-import postgres from 'postgres';
 import { Task } from './definition';
 import { createClient } from '@/utils/supabase/server';
-
-const sql = postgres(process.env.POSTGRES_URL!, {
-    ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
-    prepare: false,
-});
+import { sql } from './db';
 
 export async function fetchActiveTasks() {
     try {
