@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import type { Task } from "./lib/definition";
 import { fetchActiveTasks } from './lib/data';
 import DashboardClient from "./ui/DashboardClient";
@@ -6,32 +7,9 @@ import Sidebar from "./ui/Sidebar";
 import { createClient } from "@/utils/supabase/server";
 import AuthButton from "./ui/AuthButton";
 
-async function DashboardContent({ user, tab }: { user: any; tab: string }) {
-  let activeTasks: Task[] = [];
-
-  try {
-    activeTasks = await fetchActiveTasks();
-  } catch(error) {
-    console.error(error);
-    throw new Error('Database Error: Failed to fetch data tasks');
-  }
-
-  return <DashboardClient tasks={activeTasks} user={user} tab={tab}/>;
-} 
-
-interface PageProps {
-  searchParams: Promise<{ tab?: string}>;
-}
-
-export default async function Home({ searchParams }: PageProps){
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const resolvedParams = await searchParams;
-  const activeTab = resolvedParams.tab || 'focus';
-
+export function BackgroundDecor(){
   return(
-    <main className="flex min-h-screen flex-col md:flex-row bg-dark-espresso relative overflow-hidden">
+    <>
       {/* Advanced Ambient Glows */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(217,119,6,0.18),transparent_65%)] pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(35,57,21,0.45),transparent_60%)] pointer-events-none z-0" />
@@ -87,8 +65,41 @@ export default async function Home({ searchParams }: PageProps){
           strokeWidth="1" 
         />
       </svg>
+    </>
+  )
+}
 
+async function DashboardContent({ user, tab }: { user: any; tab: string }) {
+  let activeTasks: Task[] = [];
 
+  try {
+    activeTasks = await fetchActiveTasks();
+  } catch(error) {
+    console.error(error);
+    throw new Error('Database Error: Failed to fetch data tasks');
+  }
+
+  return <DashboardClient tasks={activeTasks} user={user} tab={tab}/>;
+} 
+
+interface PageProps {
+  searchParams: Promise<{ tab?: string}>;
+}
+
+export default async function Home({ searchParams }: PageProps){
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const resolvedParams = await searchParams;
+  const validTabs = ['focus', 'settings'];
+  if (resolvedParams.tab && !validTabs.includes(resolvedParams.tab)) {
+    notFound();
+  }
+  const activeTab = resolvedParams.tab || 'focus';
+
+  return(
+    <main className="flex min-h-screen flex-col md:flex-row bg-dark-espresso relative overflow-hidden">
+      <BackgroundDecor/>
       {/* Sidebar */}
       <Sidebar activeTab={activeTab} />
       {/* Main Content Area */}
