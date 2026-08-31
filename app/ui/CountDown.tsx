@@ -70,6 +70,29 @@ export default function CountDownTimer({
     }
   }, [timeLeft, buttonStart, taskId, mode, breakTime, focusTime]);
 
+  const toggleTimer = () => {
+    setTimeLeft((prev) => (prev === 0 ? totalTime : prev));
+    setButtonStart((prev) => !prev);
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (e:  KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+
+      if(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.code === 'Space'){
+        e.preventDefault();
+        toggleTimer();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return() => window.removeEventListener('keydown', handleKeyDown);
+  }, [totalTime])
+
 
   const elapsed = totalTime - timeLeft;
   const progressPercent = elapsed / totalTime;
@@ -88,9 +111,9 @@ export default function CountDownTimer({
   const handleY = 100 + radius * Math.sin((angle * Math.PI) / 180);
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#141e0f]/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 rounded-[2rem] w-full max-w-3xl mb-8 relative z-10">
+    <div className="flex flex-col items-center justify-center bg-[#141e0f]/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 rounded-4xl w-full max-w-3xl mb-8 relative z-10">
       
-      <div className="relative w-[320px] h-[320px] flex items-center justify-center">
+      <div className="relative w-[320px] h-80 flex items-center justify-center">
         {/* Circular SVG */}
         <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full drop-shadow-lg overflow-visible">
           {/* Track */}
@@ -162,11 +185,7 @@ export default function CountDownTimer({
                 ? 'bg-warm-brown/80 border-warm-brown hover:bg-warm-brown'
                 : 'bg-olive-green/80 border-olive-green hover:bg-olive-green'
             )}
-            onClick={() => {
-
-              timeLeft === 0 ? setTimeLeft(totalTime) : setTimeLeft(timeLeft);
-              setButtonStart((prev) => !prev);
-            }}
+            onClick={toggleTimer}
           >
             {buttonStart ? <IoPause className="w-5 h-5"/> : <IoPlay className="w-5 h-5"/>}
             <span className="tracking-widest uppercase text-sm">{buttonStart ? 'Pause' : timeLeft === 0 ? 'Restart' : 'Start'}</span>
