@@ -11,7 +11,7 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
         </div>
       </div>
 
-      <nav className="flex flex-row md:flex-col gap-4 pr-0 md:pr-6">
+      <nav className="flex flex-row justify-center md:flex-col md:justify-start gap-4 pr-0 md:pr-6">
         <Link
           href="/?tab=focus"
           className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
@@ -21,7 +21,7 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           }`}
         >
           <BiStopwatch className={`w-6 h-6 ${activeTab === 'focus' ? 'text-olive-green' : ''}`} />
-          <span className="font-semibold tracking-wide">Focus</span>
+          <span className="hidden md:inline font-semibold tracking-wide">Focus</span>
         </Link>
 
         <Link
@@ -33,7 +33,7 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           }`}
         >
           <BiBarChartAlt2 className={`w-6 h-6 ${activeTab === 'report' ? 'text-olive-green' : ''}`} />
-          <span className="font-semibold tracking-wide">Report</span>
+          <span className="hidden md:inline font-semibold tracking-wide">Report</span>
         </Link>
 
         <Link
@@ -45,7 +45,7 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           }`}
         >
           <BiCog className={`w-6 h-6 ${activeTab === 'settings' ? 'text-olive-green' : ''}`}/>
-          <span className='font-semibold tracking-wide'>Settings</span>
+          <span className='hidden md:inline font-semibold tracking-wide'>Settings</span>
         </Link>
 
         <a 
@@ -55,7 +55,7 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           className="flex items-center gap-4 px-4 py-3 text-foreground/60 hover:text-foreground transition-colors pl-[1.25rem] no-underline"
         >
           <BiEnvelope className="w-6 h-6" />
-          <span className="font-medium tracking-wide">Contact</span>
+          <span className="hidden md:inline font-medium tracking-wide">Contact</span>
         </a>
       </nav>
     </aside>
