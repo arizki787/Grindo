@@ -95,7 +95,7 @@ export default function CountDownTimer({
 
 
   const elapsed = totalTime - timeLeft;
-  const progressPercent = elapsed / totalTime;
+  const progressPercent = totalTime > 0 ? elapsed / totalTime : 0;
   
   // Circle Math
   const radius = 90;
@@ -105,18 +105,13 @@ export default function CountDownTimer({
   const minutes = String(Math.floor(timeLeft/60)).padStart(2, '0');
   const seconds = String(timeLeft%60).padStart(2, '0');
 
-  // Handle circular handle position
-  const angle = progressPercent * 360 - 90; // -90 to start at top
-  const handleX = 100 + radius * Math.cos((angle * Math.PI) / 180);
-  const handleY = 100 + radius * Math.sin((angle * Math.PI) / 180);
-
   return (
     <div className="flex flex-col items-center justify-center bg-[#141e0f]/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 rounded-4xl w-full max-w-3xl mb-8 relative z-10">
       
       <div className="relative w-[320px] h-80 flex items-center justify-center">
         {/* Circular SVG */}
         <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full drop-shadow-lg overflow-visible">
-          {/* Track */}
+
           <circle 
             cx="100" cy="100" r={radius} 
             fill="none" 
@@ -125,9 +120,9 @@ export default function CountDownTimer({
             className="text-olive-green/20"
             strokeDasharray="4 6" // Dashed track look
           />
-          {/* Progress */}
+
           <circle 
-            cx="100" cy="100" r={radius} 
+            cx="100" cy="100" r={radius} // circle progress bar 
             fill="none" 
             stroke="#a3e635" // lime-400
             strokeWidth="8" 
@@ -135,14 +130,30 @@ export default function CountDownTimer({
             strokeDashoffset={strokeDashoffset} 
             strokeLinecap="round" 
             transform="rotate(-90 100 100)"
-            className="transition-all duration-1000 ease-linear drop-shadow-[0_0_15px_rgba(163,230,53,0.4)]"
+            className={clsx(
+              "drop-shadow-[0_0_15px_rgba(163,230,53,0.4)]",
+              buttonStart ? "transition-[stroke-dashoffset] duration-1000 ease-linear" : "transition-none"
+            )}
           />
-          {/* Handle */}
-          <circle
-            cx={handleX} cy={handleY} r="6"
-            fill="#a3e635"
-            className="transition-all duration-1000 ease-linear shadow-lg"
-          />
+
+          <g
+            style={{
+              transform: `rotate(${progressPercent * 360}deg)`,
+              transformBox: 'view-box',
+              transformOrigin: '100px 100px',
+            }}
+            className={clsx(
+              buttonStart ? "transition-transform duration-1000 ease-linear" : "transition-none"
+            )}
+          >
+            <circle
+              cx="100" 
+              cy={100 - radius} 
+              r="6" 
+              fill="#a3e635"
+              className="shadow-lg"
+            />
+          </g>
         </svg>
 
         {/* Inner Content */}

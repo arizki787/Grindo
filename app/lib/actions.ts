@@ -15,9 +15,9 @@ async function getRequiredUserId() {
 
 const FormSchema = z.object({
     id: z.string(),
-    name: z.string(),
+    name: z.string().trim().min(1, 'Task name is required').max(80, 'Task name cannot exceed 80 characters'),
     count: z.coerce.number(),
-    goal: z.coerce.number(),
+    goal: z.coerce.number().min(1, 'Goal must be at least 1'),
 })
 
 const CreateTask = FormSchema.pick({ name: true, goal: true });
@@ -29,7 +29,7 @@ export async function createTask(formData: FormData) {
         goal: formData.get('goal'),
     }) 
     if (!validateFields.success){
-        throw new Error('Missing inputs. Failed to create task.');
+        throw new Error('Missing or invalid inputs. Failed to create task.');
     }
     const { name, goal } = validateFields.data;
     try {
@@ -81,10 +81,15 @@ export async function incrementTask(id: string) {
 
 export async function updateTask(id: string, name: string, goal: number) {
     const userId = await getRequiredUserId();
+    const trimmedName = name.trim().slice(0, 80);
+    const validGoal = Math.max(1, Math.floor(goal));
+    if (!trimmedName) {
+        throw new Error('Task name cannot be empty');
+    }
     try {
         await sql`
             UPDATE tasks
-            SET name = ${name}, goal = ${goal}
+            SET name = ${trimmedName}, goal = ${validGoal}
             WHERE id = ${id} AND user_id = ${userId}
         `;
     } catch (error) {
