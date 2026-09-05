@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Task } from "../lib/definition";
 import CountDownTimer from "./CountDown";
 import TaskForm from "./Tasks";
-import { createTask, updateTask, deleteTask, incrementTask } from "../lib/actions";
+import { createTask, updateTask, deleteTask, incrementTask } from "../lib/actions/tasks";
 import SettingsForm from "./Settings";
+import Report from "./Report";
 
 const fallbackTasks: Task[] = [
   { id: "sample-1", name: "Create TASK", count: 3, goal: 20, is_deleted: false, created_at: new Date().toISOString() },
@@ -125,6 +126,10 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
         );
     }
 
+    if (tab === 'report') {
+        return <Report isLoggedIn={false} />;
+    }
+
     return (
         <>
             <CountDownTimer 
@@ -132,6 +137,7 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
                 onIncrement={handleIncrement}
                 focusTime={focusMinutes*60}
                 breakTime={breakMinutes*60}
+                isLoggedIn={isLoggedIn}
             />
             <TaskForm 
                 tasks={activeTasks}

@@ -1,31 +1,59 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import { BiLeaf, BiBed } from 'react-icons/bi';
 import { FiRefreshCcw } from 'react-icons/fi';
 import { IoPause, IoPlay } from 'react-icons/io5';
+import { startFocusSession, endFocusSession } from '../lib/actions/focus-session';
 
 export default function CountDownTimer({
-  taskId, 
-  onIncrement, 
-  focusTime, 
-  breakTime
-}: { 
-  taskId: string | null; 
-  onIncrement: (id: string) => void; 
-  focusTime: number; 
-  breakTime: number
-;}) {
-  
+  taskId,
+  onIncrement,
+  focusTime,
+  breakTime,
+  isLoggedIn,
+}: {
+  taskId: string | null;
+  onIncrement: (id: string) => void;
+  focusTime: number;
+  breakTime: number;
+  isLoggedIn: boolean;
+}) {
   const [mode, setMode] = useState<'focus' | 'rest'>('focus');
-  const [buttonStart, setButtonStart] = useState(false); // false = logo start, true = logo play
+  const [buttonStart, setButtonStart] = useState(false);
   const [timeLeft, setTimeLeft] = useState(focusTime);
+  const sessionIdRef = useRef<string | null>(null);
   const totalTime = mode === 'focus' ? focusTime : breakTime;
-  
-  const playNotificationSound = ()  => {
+
+  const syncSessionId = (id: string | null) => {
+    sessionIdRef.current = id;
+  };
+
+  const closeActiveSession = async () => {
+    const id = sessionIdRef.current;
+    if (!id) return;
+    syncSessionId(null);
+    try {
+      await endFocusSession(id);
+    } catch (err) {
+      console.error('Failed to end focus session', err);
+    }
+  };
+
+  const openFocusSession = async () => {
+    if (!isLoggedIn || mode !== 'focus') return;
+    try {
+      const id = await startFocusSession(taskId);
+      syncSessionId(id);
+    } catch (err) {
+      console.error('Failed to start focus session', err);
+    }
+  };
+
+  const playNotificationSound = () => {
     try {
       const audio = new Audio('/notification.MP3');
-      audio.play().catch(err => console.error('Audio play error:', err));
+      audio.play().catch((err) => console.error('Audio play error:', err));
     } catch (err) {
       console.error('Failed to play sound', err);
     }
@@ -41,7 +69,7 @@ export default function CountDownTimer({
     const countDownInterval = setInterval(() => {
       const now = Date.now();
       const remainingSeconds = Math.max(0, Math.ceil((targetTime - now) / 1000));
-      
+
       setTimeLeft(remainingSeconds);
 
       if (remainingSeconds <= 0) {
@@ -51,11 +79,13 @@ export default function CountDownTimer({
     }, 200);
 
     return () => clearInterval(countDownInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only restart interval when timer starts
   }, [buttonStart, taskId]);
 
   useEffect(() => {
     if (timeLeft === 0 && !buttonStart) {
       if (mode === 'focus') {
+        void closeActiveSession();
         if (taskId && onIncrement) {
           onIncrement(taskId);
         }
@@ -68,71 +98,111 @@ export default function CountDownTimer({
         setTimeLeft(focusTime);
       }
     }
-  }, [timeLeft, buttonStart, taskId, mode, breakTime, focusTime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- completion side-effects only when timer hits zero
+  }, [timeLeft, buttonStart]);
 
   const toggleTimer = () => {
+    if (buttonStart) {
+      // Pausing
+      void closeActiveSession();
+      setButtonStart(false);
+      return;
+    }
+
+    // Starting / resuming
     setTimeLeft((prev) => (prev === 0 ? totalTime : prev));
-    setButtonStart((prev) => !prev);
-  }
+    setButtonStart(true);
+    if (mode === 'focus' && isLoggedIn) {
+      void openFocusSession();
+    }
+  };
 
   useEffect(() => {
-    const handleKeyDown = (e:  KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
 
-      if(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
         return;
       }
 
-      if (e.code === 'Space'){
+      if (e.code === 'Space') {
         e.preventDefault();
         toggleTimer();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return() => window.removeEventListener('keydown', handleKeyDown);
-  }, [totalTime])
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // toggleTimer closes over current timer/session state
+  });
 
+  const handleModeSwitch = () => {
+    if (buttonStart && mode === 'focus') {
+      void closeActiveSession();
+    }
+    const newMode = mode === 'focus' ? 'rest' : 'focus';
+    setMode(newMode);
+    setTimeLeft(newMode === 'focus' ? focusTime : breakTime);
+    setButtonStart(false);
+  };
+
+  const handleReset = () => {
+    if (buttonStart && mode === 'focus') {
+      void closeActiveSession();
+    }
+    setTimeLeft(totalTime);
+    setButtonStart(false);
+  };
 
   const elapsed = totalTime - timeLeft;
   const progressPercent = totalTime > 0 ? elapsed / totalTime : 0;
-  
-  // Circle Math
+
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - progressPercent * circumference;
 
-  const minutes = String(Math.floor(timeLeft/60)).padStart(2, '0');
-  const seconds = String(timeLeft%60).padStart(2, '0');
+  const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+  const seconds = String(timeLeft % 60).padStart(2, '0');
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#141e0f]/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-10 rounded-4xl w-full max-w-3xl mb-8 relative z-10">
-      
       <div className="relative w-[320px] h-80 flex items-center justify-center">
-        {/* Circular SVG */}
-        <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full drop-shadow-lg overflow-visible">
-
-          <circle 
-            cx="100" cy="100" r={radius} 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="6" 
+        <svg
+          viewBox="0 0 200 200"
+          className="absolute inset-0 w-full h-full drop-shadow-lg overflow-visible"
+        >
+          <circle
+            cx="100"
+            cy="100"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="6"
             className="text-olive-green/20"
-            strokeDasharray="4 6" // Dashed track look
+            strokeDasharray="4 6"
           />
 
-          <circle 
-            cx="100" cy="100" r={radius} // circle progress bar 
-            fill="none" 
-            stroke="#a3e635" // lime-400
-            strokeWidth="8" 
-            strokeDasharray={circumference} 
-            strokeDashoffset={strokeDashoffset} 
-            strokeLinecap="round" 
+          <circle
+            cx="100"
+            cy="100"
+            r={radius}
+            fill="none"
+            stroke="#a3e635"
+            strokeWidth="8"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
             transform="rotate(-90 100 100)"
             className={clsx(
-              "drop-shadow-[0_0_15px_rgba(163,230,53,0.4)]",
-              buttonStart ? "transition-[stroke-dashoffset] duration-1000 ease-linear" : "transition-none"
+              'drop-shadow-[0_0_15px_rgba(163,230,53,0.4)]',
+              buttonStart
+                ? 'transition-[stroke-dashoffset] duration-1000 ease-linear'
+                : 'transition-none'
             )}
           />
 
@@ -143,31 +213,27 @@ export default function CountDownTimer({
               transformOrigin: '100px 100px',
             }}
             className={clsx(
-              buttonStart ? "transition-transform duration-1000 ease-linear" : "transition-none"
+              buttonStart
+                ? 'transition-transform duration-1000 ease-linear'
+                : 'transition-none'
             )}
           >
             <circle
-              cx="100" 
-              cy={100 - radius} 
-              r="6" 
+              cx="100"
+              cy={100 - radius}
+              r="6"
               fill="#a3e635"
               className="shadow-lg"
             />
           </g>
         </svg>
 
-        {/* Inner Content */}
         <div className="relative flex flex-col items-center justify-center z-10 h-full gap-2">
           <button
-            onClick={() => {
-              const newMode = mode === 'focus' ? 'rest' : 'focus';
-              setMode(newMode);
-              setTimeLeft(newMode === 'focus' ? focusTime : breakTime);
-              setButtonStart(false);
-            }}
+            onClick={handleModeSwitch}
             className={clsx(
               'flex items-center gap-2 px-4 py-1.5 border rounded-full shadow-inner mb-2 transition-all cursor-pointer duration-300 outline-none select-none',
-              mode === 'focus'  
+              mode === 'focus'
                 ? 'bg-white/5 border-white/10 hover:bg-white/10 text-foreground/80'
                 : 'bg-emerald-950/80 border-[#a3e635] text-white shadow-[0_0_15px_rgba(163,230,53,0.4)] scale-105'
             )}
@@ -175,12 +241,16 @@ export default function CountDownTimer({
             {mode === 'focus' ? (
               <>
                 <BiLeaf className="text-[#a3e635] w-4 h-4 animate-pulse" />
-                <span className="text-xs font-semibold tracking-widest uppercase">Focus Time</span>
+                <span className="text-xs font-semibold tracking-widest uppercase">
+                  Focus Time
+                </span>
               </>
             ) : (
               <>
                 <BiBed className="text-[#a3e635] w-4 h-4 animate-bounce" />
-                <span className="text-xs font-semibold tracking-widest uppercase">Rest Mode</span>
+                <span className="text-xs font-semibold tracking-widest uppercase">
+                  Rest Mode
+                </span>
               </>
             )}
           </button>
@@ -198,21 +268,27 @@ export default function CountDownTimer({
             )}
             onClick={toggleTimer}
           >
-            {buttonStart ? <IoPause className="w-5 h-5"/> : <IoPlay className="w-5 h-5"/>}
-            <span className="tracking-widest uppercase text-sm">{buttonStart ? 'Pause' : timeLeft === 0 ? 'Restart' : 'Start'}</span>
+            {buttonStart ? (
+              <IoPause className="w-5 h-5" />
+            ) : (
+              <IoPlay className="w-5 h-5" />
+            )}
+            <span className="tracking-widest uppercase text-sm">
+              {buttonStart ? 'Pause' : timeLeft === 0 ? 'Restart' : 'Start'}
+            </span>
           </button>
-
         </div>
       </div>
 
-      <button 
-        onClick={() => { setTimeLeft(totalTime); setButtonStart(false);}}
+      <button
+        onClick={handleReset}
         className="mt-8 flex items-center gap-2 text-foreground/60 hover:text-[#a3e635] transition-colors"
       >
         <FiRefreshCcw />
-        <span className="text-sm font-semibold tracking-widest uppercase">Reset</span>
+        <span className="text-sm font-semibold tracking-widest uppercase">
+          Reset
+        </span>
       </button>
-
     </div>
   );
 }

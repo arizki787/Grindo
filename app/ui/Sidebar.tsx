@@ -1,4 +1,4 @@
-import { BiLeaf, BiStopwatch, BiEnvelope, BiCog } from 'react-icons/bi';
+import { BiLeaf, BiStopwatch, BiEnvelope, BiCog, BiBarChartAlt2 } from 'react-icons/bi';
 import Link from 'next/link';
 
 export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
@@ -12,7 +12,6 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
       </div>
 
       <nav className="flex flex-row md:flex-col gap-4 pr-0 md:pr-6">
-        {/* focus link */}
         <Link
           href="/?tab=focus"
           className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
@@ -24,8 +23,19 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           <BiStopwatch className={`w-6 h-6 ${activeTab === 'focus' ? 'text-olive-green' : ''}`} />
           <span className="font-semibold tracking-wide">Focus</span>
         </Link>
-        {/* settings lnk */}
-        
+
+        <Link
+          href="/?tab=report"
+          className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
+            activeTab === 'report'
+              ? 'bg-[#141e0f]/40 border-l-4 border-olive-green text-foreground'
+              : 'border-transparent text-foreground/60 hover:text-foreground'
+          }`}
+        >
+          <BiBarChartAlt2 className={`w-6 h-6 ${activeTab === 'report' ? 'text-olive-green' : ''}`} />
+          <span className="font-semibold tracking-wide">Report</span>
+        </Link>
+
         <Link
           href='/?tab=settings'
           className={`flex items-center gap-4 px-4 py-3 rounded-r-full rounded-l-md border-l-4 transition-all shadow-sm no-underline ${
@@ -38,7 +48,6 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
           <span className='font-semibold tracking-wide'>Settings</span>
         </Link>
 
-        {/* contact link */}
         <a 
           href="https://adxtinsight.site" 
           target="_blank" 
@@ -52,6 +61,3 @@ export default function Sidebar({ activeTab = 'focus'}: { activeTab?:string}) {
     </aside>
   );
 }
-
-
-

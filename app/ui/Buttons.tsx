@@ -1,5 +1,5 @@
 import { CiTrash, CiPen  } from "react-icons/ci";
-import { deleteTaskAction } from "../lib/actions";
+import { deleteTaskAction } from "../lib/actions/tasks";
 
 export function DeleteTask({ id }: { id: string }) {
     return (

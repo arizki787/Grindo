@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Task } from "./lib/definition";
-import { fetchActiveTasks } from './lib/data';
+import { fetchActiveTasks, fetchWeeklyReport } from './lib/data';
 import DashboardClient from "./ui/DashboardClient";
 import Sidebar from "./ui/Sidebar";
+import Report from "./ui/Report";
 import { createClient } from "@/utils/supabase/server";
 import AuthButton from "./ui/AuthButton";
 
@@ -80,6 +81,17 @@ async function DashboardContent({ user, tab }: { user: any; tab: string }) {
   }
 
   return <DashboardClient tasks={activeTasks} user={user} tab={tab}/>;
+}
+
+async function ReportContent() {
+  let report: Awaited<ReturnType<typeof fetchWeeklyReport>> = [];
+  try {
+    report = await fetchWeeklyReport();
+  } catch (error) {
+    console.error(error);
+    throw new Error('Database Error: Failed to fetch weekly report');
+  }
+  return <Report data={report} isLoggedIn={true} />;
 } 
 
 interface PageProps {
@@ -91,7 +103,7 @@ export default async function Home({ searchParams }: PageProps){
   const { data: { user } } = await supabase.auth.getUser();
 
   const resolvedParams = await searchParams;
-  const validTabs = ['focus', 'settings'];
+  const validTabs = ['focus', 'settings', 'report'];
   if (resolvedParams.tab && !validTabs.includes(resolvedParams.tab)) {
     notFound();
   }
@@ -110,7 +122,11 @@ export default async function Home({ searchParams }: PageProps){
         </div>
 
         <Suspense fallback={<div className="text-foreground mt-20">loading...</div>}>
-          <DashboardContent user={user} tab={activeTab}/>
+          {activeTab === 'report' && user ? (
+            <ReportContent />
+          ) : (
+            <DashboardContent user={user} tab={activeTab}/>
+          )}
         </Suspense>
       </div>
     </main>
