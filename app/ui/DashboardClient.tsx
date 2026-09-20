@@ -49,8 +49,6 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
     const handleSaveSettings = (newFocus: number, newBreak: number) => {
         setFocusMinutes(newFocus);
         setBreakMinutes(newBreak);
-        localStorage.setItem('grindo_focus_time', String(newFocus));
-        localStorage.setItem('grindo_break_time', String(newBreak));
     }
 
     const isLoggedIn = !!user;
@@ -125,10 +123,7 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
             />
         );
     }
-
-    if (tab === 'report') {
-        return <Report isLoggedIn={false} />;
-    }
+    // report tab already set on the parent component
 
     return (
         <>
