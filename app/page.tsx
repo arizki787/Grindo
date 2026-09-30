@@ -122,11 +122,12 @@ export default async function Home({ searchParams }: PageProps){
         </div>
 
         <Suspense fallback={<div className="text-foreground mt-20">loading...</div>}>
-          {activeTab === 'report' && user ? (
-            <ReportContent />
-          ) : (
+          <div className={`w-full flex justify-center ${activeTab === 'report' ? 'block' : 'hidden'}`}>
+            {user ? <ReportContent /> : <Report data={[]} isLoggedIn={false} />}
+          </div>
+          <div className={`w-full flex justify-center flex-col items-center ${activeTab !== 'report' ? 'block' : 'hidden'}`}>
             <DashboardContent user={user} tab={activeTab}/>
-          )}
+          </div>
         </Suspense>
       </div>
     </main>

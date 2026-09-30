@@ -5,7 +5,7 @@ import CountDownTimer from "./CountDown";
 import TaskForm from "./Tasks";
 import { createTask, updateTask, deleteTask, incrementTask } from "../lib/actions/tasks";
 import SettingsForm from "./Settings";
-import Report from "./Report";
+
 
 const fallbackTasks: Task[] = [
   { id: "sample-1", name: "Create TASK", count: 3, goal: 20, is_deleted: false, created_at: new Date().toISOString() },
@@ -49,6 +49,8 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
     const handleSaveSettings = (newFocus: number, newBreak: number) => {
         setFocusMinutes(newFocus);
         setBreakMinutes(newBreak);
+        localStorage.setItem('grindo_focus_time', String(newFocus));
+        localStorage.setItem('grindo_break_time', String(newBreak));
     }
 
     const isLoggedIn = !!user;
@@ -114,35 +116,34 @@ export default function DashboardClient({ tasks, user, tab = 'focus' }: { tasks 
         }
     };
     
-    if (tab === 'settings') {
-        return (
-            <SettingsForm
-                focusTime={focusMinutes}
-                breakTime={breakMinutes}
-                onSave={handleSaveSettings}
-            />
-        );
-    }
-    // report tab already set on the parent component
-
     return (
         <>
-            <CountDownTimer 
-                taskId={selectedId} 
-                onIncrement={handleIncrement}
-                focusTime={focusMinutes*60}
-                breakTime={breakMinutes*60}
-                isLoggedIn={isLoggedIn}
-            />
-            <TaskForm 
-                tasks={activeTasks}
-                selectedId={selectedId}
-                setSelectedId={setSelectedId}
-                isLoggedIn={isLoggedIn}
-                onCreate={handleCreate}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-            />
+            <div className={`w-full flex flex-col items-center justify-center ${tab === 'settings' ? 'block' : 'hidden'}`}>
+                <SettingsForm
+                    focusTime={focusMinutes}
+                    breakTime={breakMinutes}
+                    onSave={handleSaveSettings}
+                />
+            </div>
+
+            <div className={`w-full flex flex-col items-center justify-center ${tab !== 'settings' ? 'block' : 'hidden'}`}>
+                <CountDownTimer 
+                    taskId={selectedId} 
+                    onIncrement={handleIncrement}
+                    focusTime={focusMinutes*60}
+                    breakTime={breakMinutes*60}
+                    isLoggedIn={isLoggedIn}
+                />
+                <TaskForm 
+                    tasks={activeTasks}
+                    selectedId={selectedId}
+                    setSelectedId={setSelectedId}
+                    isLoggedIn={isLoggedIn}
+                    onCreate={handleCreate}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                />
+            </div>
         </>
     );
 }

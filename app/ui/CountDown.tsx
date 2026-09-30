@@ -24,6 +24,7 @@ export default function CountDownTimer({
   const [timeLeft, setTimeLeft] = useState(focusTime);
   const sessionIdRef = useRef<string | null>(null);
   const totalTime = mode === 'focus' ? focusTime : breakTime;
+  const prevTotalTimeRef = useRef(totalTime);
 
   const syncSessionId = (id: string | null) => {
     sessionIdRef.current = id;
@@ -58,6 +59,16 @@ export default function CountDownTimer({
       console.error('Failed to play sound', err);
     }
   };
+
+  // Apply new timer duration immediately when not running; defer when running
+  useEffect(() => {
+    if (prevTotalTimeRef.current !== totalTime) {
+      if (!buttonStart) {
+        setTimeLeft(totalTime);
+      }
+      prevTotalTimeRef.current = totalTime;
+    }
+  }, [totalTime, buttonStart]);
 
   useEffect(() => {
     if (!buttonStart) return;
