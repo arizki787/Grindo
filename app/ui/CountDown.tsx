@@ -26,6 +26,11 @@ export default function CountDownTimer({
   const totalTime = mode === 'focus' ? focusTime : breakTime;
   const prevTotalTimeRef = useRef(totalTime);
 
+  const startTimeRef = useRef<number | null>(null);
+  const elapsedWhenPausedRef = useRef<number>(0);
+  const timerIdRef = useRef<NodeJS.Timeout | null>(null);
+  const totalTimeRef = useRef<number>(totalTime);
+
   const syncSessionId = (id: string | null) => {
     sessionIdRef.current = id;
   };
@@ -71,50 +76,95 @@ export default function CountDownTimer({
   }, [totalTime, buttonStart]);
 
   useEffect(() => {
-    if (!buttonStart) return;
+    if (!buttonStart) {
+      totalTimeRef.current = totalTime;
+    }
+  }, [totalTime, buttonStart]);
 
-    const startTime = Date.now();
-    const initialTimeLeft = timeLeft;
-    const targetTime = startTime + initialTimeLeft * 1000;
-
-    const countDownInterval = setInterval(() => {
-      const now = Date.now();
-      const remainingSeconds = Math.max(0, Math.ceil((targetTime - now) / 1000));
-
-      setTimeLeft(remainingSeconds);
-
-      if (remainingSeconds <= 0) {
-        clearInterval(countDownInterval);
-        setButtonStart(false);
+  const handleTimerEnd = () => {
+    if (mode === 'focus') {
+      void closeActiveSession();
+      if (taskId && onIncrement) {
+        onIncrement(taskId);
       }
-    }, 200);
+      playNotificationSound();
+      setMode('rest');
+      setTimeLeft(breakTime);
+    } else {
+      playNotificationSound();
+      setMode('focus');
+      setTimeLeft(focusTime);
+    }
+  };
 
-    return () => clearInterval(countDownInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only restart interval when timer starts
-  }, [buttonStart, taskId]);
+  const updateTimerDisplayRef = useRef<() => void>(() => {});
+  updateTimerDisplayRef.current = () => {
+    if (!startTimeRef.current) return;
+    const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const remainingSec = Math.max(0, totalTimeRef.current - elapsedSec);
+    setTimeLeft(remainingSec);
+
+    if (remainingSec <= 0) {
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+      setButtonStart(false);
+      handleTimerEnd();
+    }
+  };
 
   useEffect(() => {
-    if (timeLeft === 0 && !buttonStart) {
-      if (mode === 'focus') {
-        void closeActiveSession();
-        if (taskId && onIncrement) {
-          onIncrement(taskId);
-        }
-        playNotificationSound();
-        setMode('rest');
-        setTimeLeft(breakTime);
-      } else {
-        playNotificationSound();
-        setMode('focus');
-        setTimeLeft(focusTime);
+    if (!buttonStart) {
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
       }
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- completion side-effects only when timer hits zero
-  }, [timeLeft, buttonStart]);
+
+    if (timeLeft === totalTime) {
+      elapsedWhenPausedRef.current = 0;
+    }
+    startTimeRef.current = Date.now() - elapsedWhenPausedRef.current * 1000;
+
+    timerIdRef.current = setInterval(() => {
+      updateTimerDisplayRef.current();
+    }, 250);
+
+    return () => {
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+    };
+  }, [buttonStart, totalTime]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && startTimeRef.current) {
+        updateTimerDisplayRef.current();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const toggleTimer = () => {
     if (buttonStart) {
       // Pausing
+      const elapsedSec = startTimeRef.current
+        ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+        : 0;
+      elapsedWhenPausedRef.current = elapsedSec;
+      if (timerIdRef.current) {
+        clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+      startTimeRef.current = null;
       void closeActiveSession();
       setButtonStart(false);
       return;
@@ -160,6 +210,12 @@ export default function CountDownTimer({
     setMode(newMode);
     setTimeLeft(newMode === 'focus' ? focusTime : breakTime);
     setButtonStart(false);
+    startTimeRef.current = null;
+    elapsedWhenPausedRef.current = 0;
+    if (timerIdRef.current) {
+      clearInterval(timerIdRef.current);
+      timerIdRef.current = null;
+    }
   };
 
   const handleReset = () => {
@@ -168,6 +224,12 @@ export default function CountDownTimer({
     }
     setTimeLeft(totalTime);
     setButtonStart(false);
+    startTimeRef.current = null;
+    elapsedWhenPausedRef.current = 0;
+    if (timerIdRef.current) {
+      clearInterval(timerIdRef.current);
+      timerIdRef.current = null;
+    }
   };
 
   const elapsed = totalTime - timeLeft;
